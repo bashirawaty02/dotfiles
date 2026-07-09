@@ -168,13 +168,16 @@ if [[ ! -d "${ZDOTDIR:-$HOME}/.zprezto" ]]; then
     git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
 
     if $is_zsh; then
+        # Run Zsh-only globbing inside a Zsh subprocess
         zsh -c '
             setopt EXTENDED_GLOB
-            for rcfile in "'"${ZDOTDIR:-$HOME}"'"/.zprezto/runcoms/^README.md(.N); do
-                ln -s "$rcfile" "'"${ZDOTDIR:-$HOME}"'"/.${rcfile:t}
+            ZDOTDIR="${ZDOTDIR:-$HOME}"
+            for rcfile in "$ZDOTDIR/.zprezto/runcoms/"^README.md(.N); do
+                ln -s "$rcfile" "$ZDOTDIR/.${rcfile:t}"
             done
         '
     else
+        # Bash-safe globbing
         shopt -s extglob
         for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/!(*README.md); do
             ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile##*/}"
@@ -188,13 +191,6 @@ fi
     git submodule update --init --recursive
 )
 
-mkdir -p "$HOME/.zsh"
-
-if [[ ! -d "$HOME/.zsh/fast-syntax-highlighting" ]]; then
-    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git \
-        "$HOME/.zsh/fast-syntax-highlighting"
-fi
-pull_repo "$HOME/.zsh/fast-syntax-highlighting"
 
 ###############################################################################
 # Neovim (source build + Python + Node)
