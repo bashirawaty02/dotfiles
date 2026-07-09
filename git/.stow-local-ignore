@@ -1,55 +1,76 @@
-# It's important that .gitignore is absent from this list, so
-# that the .gitignore in this repo gets installed by stow as
-# ~/.gitignore.
-
-# However, .git must be in this list:
+### ─────────────────────────────────────────────
+### Stow / Git Internals
+### ─────────────────────────────────────────────
 \.git
 /bin/git-deps
 
-.*,v
+### ─────────────────────────────────────────────
+### Legacy SCM Systems (safe to remove if unused)
+### ─────────────────────────────────────────────
 RCS
 CVS
 Attic
+\.hg
+_darcs
+\{arch\}
+\.arch-ids
+\.arch-inventory
+BitKeeper
+\.pcl-cvs-cache
+pm_to_blib
+blib
+,,.*        # CVS conflict files
+\.svn
+
+### ─────────────────────────────────────────────
+### Editor / Backup / Temp Files
+### ─────────────────────────────────────────────
 .*~
-\.\#.*
-\#.*\#
+\.\#.*       # Emacs lock files
+\#.*\#       # Emacs autosave
 .*\.orig
 .*\.old
 .*\.rej
 .*\.bak
+.*\.rpmsave
+.*\.cfgsave\.
+\.zshhistory
+\.bash_history
+
+### ─────────────────────────────────────────────
+### Build / Compilation Artifacts
+### ─────────────────────────────────────────────
 .*\.o
 .*\.elc
 .*\.pyc
 .*\.class
 .*\.flc
 .*\.zwc
-\.hg
-_darcs
-\{arch\}
-\.arch-ids
-\.arch-inventory
-,,.*
-\.svn
-BitKeeper
-\.pcl-cvs-cache
-pm_to_blib
-blib
-\.nfs.+
-pod2html-.+cache
-tags
-TAGS
-\.xvpics
-\.emacs\.desktop
-\.emacs\.backup
+
+### ─────────────────────────────────────────────
+### Autotools / Build Systems
+### ─────────────────────────────────────────────
+config\.log
+autom4te\.cache
 \+\+build
 _build
 Build
-\.zshhistory
-\.bash_history
-.*\.rpmsave
-.*\.cfgsave\.
-config\.log
-autom4te\.cache
-.*\.log
+
+### ─────────────────────────────────────────────
+### Tags / Indexes
+### ─────────────────────────────────────────────
+tags
+TAGS
+
+### ─────────────────────────────────────────────
+### Misc Desktop / Cache Files
+### ─────────────────────────────────────────────
+\.xvpics
+\.emacs\.desktop
+\.emacs\.backup
+
+### ─────────────────────────────────────────────
+### Documentation (safe patterns only)
+### ─────────────────────────────────────────────
 README.*
 COPYING
