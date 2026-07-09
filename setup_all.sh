@@ -113,13 +113,16 @@ pull_repo "$HOME/.tmux/plugins/tpm"
 if [[ ! -d "${ZDOTDIR:-$HOME}/.zprezto" ]]; then
     git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
 
-    # Shell-aware globbing
     if $is_zsh; then
-        setopt EXTENDED_GLOB
-        for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do
-            ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
-        done
+        # Run Zsh-only globbing inside a Zsh subprocess
+        zsh -c '
+            setopt EXTENDED_GLOB
+            for rcfile in "'"${ZDOTDIR:-$HOME}"'"/.zprezto/runcoms/^README.md(.N); do
+                ln -s "$rcfile" "'"${ZDOTDIR:-$HOME}"'"/.${rcfile:t}
+            done
+        '
     else
+        # Bash-safe globbing
         shopt -s extglob
         for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/!(*README.md); do
             ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile##*/}"
@@ -128,4 +131,6 @@ if [[ ! -d "${ZDOTDIR:-$HOME}/.zprezto" ]]; then
 fi
 
 (
-    cd "${ZDOT
+    cd "${ZDOTDIR:-$HOME}/.zprezto"
+    git pull
+    git submodule update --init --recursive
