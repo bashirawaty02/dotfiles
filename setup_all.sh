@@ -18,6 +18,31 @@ case "$CURRENT_SHELL" in
 esac
 
 ###############################################################################
+# OS Detection
+###############################################################################
+OS="unknown"
+DISTRO="unknown"
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    OS="linux"
+
+    if [[ -f /etc/os-release ]]; then
+        . /etc/os-release
+        DISTRO="$ID"
+    fi
+
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        OS="wsl"
+    fi
+
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    OS="macos"
+fi
+
+echo ">>> Detected OS: $OS"
+echo ">>> Detected Distro: $DISTRO"
+
+###############################################################################
 # Helpers
 ###############################################################################
 timestamp() { date -u +"%Y%m%d%H%M%S"; }
@@ -65,9 +90,40 @@ if [[ -d "$HOME/.zprezto/runcoms" ]]; then
 fi
 
 ###############################################################################
-# Install CLI tools
+# Install CLI tools (OS-aware)
 ###############################################################################
 mkdir -p "$HOME/bin"
+
+install_pkg() {
+    case "$OS" in
+        macos)
+            brew install "$1" || true
+            ;;
+        linux|wsl)
+            case "$DISTRO" in
+                ubuntu|debian)
+                    sudo apt-get update -y
+                    sudo apt-get install -y "$1"
+                    ;;
+                fedora)
+                    sudo dnf install -y "$1"
+                    ;;
+                centos|rhel)
+                    sudo yum install -y "$1"
+                    ;;
+                arch)
+                    sudo pacman -Sy --noconfirm "$1"
+                    ;;
+                *)
+                    echo ">>> Unknown Linux distro. Install $1 manually."
+                    ;;
+            esac
+            ;;
+        *)
+            echo ">>> Unknown OS. Install $1 manually."
+            ;;
+    esac
+}
 
 # FASD
 if [[ ! -x "$HOME/bin/fasd" ]]; then
@@ -95,6 +151,8 @@ fi
 ###############################################################################
 # TMUX + TPM
 ###############################################################################
+install_pkg tmux
+
 if [[ ! -d "$HOME/.tmux/plugins/tpm" ]]; then
     mkdir -p "$HOME/.tmux/plugins"
     git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
@@ -104,11 +162,12 @@ pull_repo "$HOME/.tmux/plugins/tpm"
 ###############################################################################
 # ZSH + PREZTO + Fast Syntax Highlighting
 ###############################################################################
+install_pkg zsh
+
 if [[ ! -d "${ZDOTDIR:-$HOME}/.zprezto" ]]; then
     git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
 
     if $is_zsh; then
-        # Run Zsh-only globbing inside a Zsh subprocess
         zsh -c '
             setopt EXTENDED_GLOB
             for rcfile in "'"${ZDOTDIR:-$HOME}"'"/.zprezto/runcoms/^README.md(.N); do
@@ -116,7 +175,6 @@ if [[ ! -d "${ZDOTDIR:-$HOME}/.zprezto" ]]; then
             done
         '
     else
-        # Bash-safe globbing
         shopt -s extglob
         for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/!(*README.md); do
             ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile##*/}"
@@ -141,6 +199,11 @@ pull_repo "$HOME/.zsh/fast-syntax-highlighting"
 ###############################################################################
 # Neovim (source build + Python + Node)
 ###############################################################################
+install_pkg ninja-build
+install_pkg gettext
+install_pkg curl
+install_pkg git
+
 NVIM="$HOME/.neovim"
 mkdir -p "$NVIM"
 
@@ -155,6 +218,9 @@ git clone --depth=1 https://github.com/neovim/neovim.git "$BUILD_DIR"
 )
 
 # Python environment
+install_pkg python3
+install_pkg python3-venv || true
+
 if [[ ! -d "$NVIM/py3" ]]; then
     python3 -m venv "$NVIM/py3"
     PIP="$NVIM/py3/bin/pip"
@@ -188,6 +254,8 @@ done
 ###############################################################################
 # Stow dotfiles
 ###############################################################################
+install_pkg stow
+
 PROGRAMS=(alias bash env git python scripts stow tmux vim zsh)
 
 mkdir -p "$HOME/.vim/undodir"
