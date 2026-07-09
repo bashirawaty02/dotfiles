@@ -11,16 +11,10 @@ is_bash=false
 is_zsh=false
 
 case "$CURRENT_SHELL" in
-    bash)
-        is_bash=true
-        ;;
-    zsh)
-        is_zsh=true
-        ;;
-    *)
-        echo ">>> Unknown shell ($CURRENT_SHELL). Defaulting to bash-safe mode."
-        is_bash=true
-        ;;
+    bash) is_bash=true ;;
+    zsh)  is_zsh=true ;;
+    *)    echo ">>> Unknown shell ($CURRENT_SHELL). Using bash-safe mode."
+          is_bash=true ;;
 esac
 
 ###############################################################################
@@ -134,3 +128,73 @@ fi
     cd "${ZDOTDIR:-$HOME}/.zprezto"
     git pull
     git submodule update --init --recursive
+)
+
+mkdir -p "$HOME/.zsh"
+
+if [[ ! -d "$HOME/.zsh/fast-syntax-highlighting" ]]; then
+    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git \
+        "$HOME/.zsh/fast-syntax-highlighting"
+fi
+pull_repo "$HOME/.zsh/fast-syntax-highlighting"
+
+###############################################################################
+# Neovim (source build + Python + Node)
+###############################################################################
+NVIM="$HOME/.neovim"
+mkdir -p "$NVIM"
+
+BUILD_DIR="/tmp/neovim-src"
+rm -rf "$BUILD_DIR"
+git clone --depth=1 https://github.com/neovim/neovim.git "$BUILD_DIR"
+
+(
+    cd "$BUILD_DIR"
+    make CMAKE_BUILD_TYPE=Release
+    make CMAKE_INSTALL_PREFIX="$NVIM" install
+)
+
+# Python environment
+if [[ ! -d "$NVIM/py3" ]]; then
+    python3 -m venv "$NVIM/py3"
+    PIP="$NVIM/py3/bin/pip"
+    "$PIP" install --upgrade pip
+    "$PIP" install neovim 'python-language-server[all]' pylint isort jedi flake8 black yapf
+fi
+
+# Node environment (fixed installer)
+if [[ ! -d "$NVIM/node" ]]; then
+    mkdir -p "$NVIM/node"
+    NODE_SCRIPT="/tmp/install-node.sh"
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh -o "$NODE_SCRIPT"
+    bash "$NODE_SCRIPT"
+    source "$HOME/.nvm/nvm.sh"
+    nvm install --lts
+    npm install -g neovim
+fi
+
+###############################################################################
+# Rust + Cargo utilities
+###############################################################################
+if [[ ! -d "$HOME/.rustup" ]]; then
+    curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y
+fi
+
+CARGO="$HOME/.cargo/bin/cargo"
+for crate in bat fd-find ripgrep exa tealdeer procs ytop hyperfine bandwhich; do
+    "$CARGO" install "$crate" || true
+done
+
+###############################################################################
+# Stow dotfiles
+###############################################################################
+PROGRAMS=(alias bash env git python scripts stow tmux vim zsh)
+
+mkdir -p "$HOME/.vim/undodir"
+
+for program in "${PROGRAMS[@]}"; do
+    echo ">>> Stowing $program"
+    stow -v --target="$HOME" "$program"
+done
+
+echo ">>> Setup complete!"
