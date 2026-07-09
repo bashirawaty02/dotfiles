@@ -1,22 +1,56 @@
+### ─────────────────────────────────────────────
+### Completion Behavior
+### ─────────────────────────────────────────────
 set completion-ignore-case on
 set show-all-if-ambiguous on
 set show-all-if-unmodified on
+set visible-stats on              # show file types in completion
+set mark-symlinked-directories on # append slash to symlink dirs
+set skip-completed-text on        # don't duplicate text on completion
 
+### ─────────────────────────────────────────────
+### Search & History
+### ─────────────────────────────────────────────
+set history-preserve-point on     # keep cursor position after history search
+set enable-meta-key on            # allow Alt key combos
+set input-meta on
+set output-meta on
+
+### ─────────────────────────────────────────────
+### Editing Mode (VI)
+### ─────────────────────────────────────────────
+# Uncomment if you want full vi mode
 # set editing-mode vi
 # set keymap vi-insert
 
 $if mode=vi
-"\C-a": beginning-of-line
-"\C-e": end-of-line
-"\C-l": clear-screen
-"\C-n": next-history
-"\C-p": previous-history
-"\C-w": backward-kill-word
+    "\C-a": beginning-of-line
+    "\C-e": end-of-line
+    "\C-l": clear-screen
+    "\C-n": next-history
+    "\C-p": previous-history
+    "\C-w": backward-kill-word
 
-"\e.": yank-last-arg
-"\e_": yank-last-arg
+    "\e.": yank-last-arg
+    "\e_": yank-last-arg
 $endif
 
-# Alt left/right moves words
+### ─────────────────────────────────────────────
+### Navigation Improvements
+### ─────────────────────────────────────────────
+# Alt + Left/Right moves by words
 "^[[1;3C": forward-word
 "^[[1;3D": backward-word
+
+# Ctrl + Left/Right (common on macOS/Linux terminals)
+"^[[1;5C": forward-word
+"^[[1;5D": backward-word
+
+### ─────────────────────────────────────────────
+### Quality of Life
+### ─────────────────────────────────────────────
+set bell-style none               # disable terminal bell
+set show-mode-in-prompt on        # show vi mode in prompt
+set blink-matching-paren on       # highlight matching parentheses
+set colored-completion-prefix on  # color the part already typed
+set colored-stats on              # color file types in completion
