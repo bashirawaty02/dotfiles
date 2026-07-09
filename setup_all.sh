@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+###############################################################################
+# Shell Detection
+###############################################################################
+CURRENT_SHELL="$(ps -p $$ -o comm=)"
+echo ">>> Detected shell: $CURRENT_SHELL"
+
+is_bash=false
+is_zsh=false
+
+case "$CURRENT_SHELL" in
+    bash)
+        is_bash=true
+        ;;
+    zsh)
+        is_zsh=true
+        ;;
+    *)
+        echo ">>> Unknown shell ($CURRENT_SHELL). Defaulting to bash-safe mode."
+        is_bash=true
+        ;;
+esac
+
+###############################################################################
+# Helpers
+###############################################################################
 timestamp() { date -u +"%Y%m%d%H%M%S"; }
 
 BACKUP_DIR="$HOME/dotfile_bk_$(timestamp)"
@@ -65,14 +90,13 @@ if [[ ! -x "$HOME/.fzf/bin/fzf" ]]; then
     yes | "$HOME/.fzf/install"
 fi
 
-# diff-so-fancy
+# diff-so-fancy (fixed URL)
 if [[ ! -x "$HOME/bin/diff-so-fancy" ]]; then
     curl -fsSL \
         -o "$HOME/bin/diff-so-fancy" \
         https://raw.githubusercontent.com/so-fancy/diff-so-fancy/master/diff-so-fancy
     chmod +x "$HOME/bin/diff-so-fancy"
 fi
-
 
 ###############################################################################
 # TMUX + TPM
@@ -89,84 +113,19 @@ pull_repo "$HOME/.tmux/plugins/tpm"
 if [[ ! -d "${ZDOTDIR:-$HOME}/.zprezto" ]]; then
     git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
 
-    setopt EXTENDED_GLOB
-    for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do
-        ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
-    done
+    # Shell-aware globbing
+    if $is_zsh; then
+        setopt EXTENDED_GLOB
+        for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/^README.md(.N); do
+            ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile:t}"
+        done
+    else
+        shopt -s extglob
+        for rcfile in "${ZDOTDIR:-$HOME}"/.zprezto/runcoms/!(*README.md); do
+            ln -s "$rcfile" "${ZDOTDIR:-$HOME}/.${rcfile##*/}"
+        done
+    fi
 fi
 
 (
-    cd "${ZDOTDIR:-$HOME}/.zprezto"
-    git pull
-    git submodule update --init --recursive
-)
-
-mkdir -p "$HOME/.zsh"
-
-if [[ ! -d "$HOME/.zsh/fast-syntax-highlighting" ]]; then
-    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git \
-        "$HOME/.zsh/fast-syntax-highlighting"
-fi
-pull_repo "$HOME/.zsh/fast-syntax-highlighting"
-
-###############################################################################
-# Neovim (source build + Python + Node)
-###############################################################################
-NVIM="$HOME/.neovim"
-mkdir -p "$NVIM"
-
-BUILD_DIR="/tmp/neovim-src"
-rm -rf "$BUILD_DIR"
-git clone --depth=1 https://github.com/neovim/neovim.git "$BUILD_DIR"
-
-(
-    cd "$BUILD_DIR"
-    make CMAKE_BUILD_TYPE=Release
-    make CMAKE_INSTALL_PREFIX="$NVIM" install
-)
-
-# Python environment
-if [[ ! -d "$NVIM/py3" ]]; then
-    python3 -m venv "$NVIM/py3"
-    PIP="$NVIM/py3/bin/pip"
-    "$PIP" install --upgrade pip
-    "$PIP" install neovim 'python-language-server[all]' pylint isort jedi flake8 black yapf
-fi
-
-# Node environment
-if [[ ! -d "$NVIM/node" ]]; then
-    mkdir -p "$NVIM/node"
-    NODE_SCRIPT="/tmp/install-node.sh"
-    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh -o "$NODE_SCRIPT"
-    bash "$NODE_SCRIPT"
-    source "$HOME/.nvm/nvm.sh"
-    nvm install --lts
-    npm install -g neovim
-fi
-
-
-###############################################################################
-# Rust + Cargo utilities
-###############################################################################
-if [[ ! -d "$HOME/.rustup" ]]; then
-    curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y
-fi
-
-CARGO="$HOME/.cargo/bin/cargo"
-for crate in bat fd-find ripgrep exa tealdeer procs ytop hyperfine bandwhich; do
-    "$CARGO" install "$crate" || true
-done
-
-###############################################################################
-# Stow dotfiles
-###############################################################################
-PROGRAMS=(alias bash env git python scripts stow tmux vim zsh)
-
-mkdir -p "$HOME/.vim/undodir"
-
-for program in "${PROGRAMS[@]}"; do
-    echo ">>> Stowing $program"
-    stow -v --target="$HOME" "$program"
-done
-
-echo ">>> Setup complete!"
+    cd "${ZDOT
