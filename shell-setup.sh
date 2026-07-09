@@ -109,6 +109,7 @@ if [[ ! -d "$NVIM/py3" ]]; then
 fi
 
 # Node environment for Neovim
+# Create node env
 if [[ ! -d $NVIM/node ]]; then
     mkdir -p $NVIM/node
     NODE_SCRIPT=/tmp/install-node.sh
@@ -118,6 +119,7 @@ if [[ ! -d $NVIM/node ]]; then
     nvm install --lts
     npm install -g neovim
 fi
+
 ###############################################################################
 # RUST
 ###############################################################################
