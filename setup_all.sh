@@ -69,9 +69,10 @@ fi
 if [[ ! -x "$HOME/bin/diff-so-fancy" ]]; then
     curl -fsSL \
         -o "$HOME/bin/diff-so-fancy" \
-        https://raw.githubusercontent.com/so-fancy/diff-so-fancy/master/third_party/build_fatpack/diff-so-fancy
+        https://raw.githubusercontent.com/so-fancy/diff-so-fancy/master/diff-so-fancy
     chmod +x "$HOME/bin/diff-so-fancy"
 fi
+
 
 ###############################################################################
 # TMUX + TPM
