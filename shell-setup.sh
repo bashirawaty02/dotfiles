@@ -109,16 +109,15 @@ if [[ ! -d "$NVIM/py3" ]]; then
 fi
 
 # Node environment for Neovim
-if [[ ! -d "$NVIM/node" ]]; then
-    mkdir -p "$NVIM/node"
-    NODE_SCRIPT="/tmp/install-node.sh"
-    curl -fsSL install-node.now.sh/lts -o "$NODE_SCRIPT"
-    chmod +x "$NODE_SCRIPT"
-    PREFIX="$NVIM/node" "$NODE_SCRIPT" -y
-    PATH="$NVIM/node/bin:$PATH"
+if [[ ! -d $NVIM/node ]]; then
+    mkdir -p $NVIM/node
+    NODE_SCRIPT=/tmp/install-node.sh
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh -o "$NODE_SCRIPT"
+    bash "$NODE_SCRIPT"
+    source "$HOME/.nvm/nvm.sh"
+    nvm install --lts
     npm install -g neovim
 fi
-
 ###############################################################################
 # RUST
 ###############################################################################
