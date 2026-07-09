@@ -1,1 +1,30 @@
+# Disable startup message
 startup_message off
+
+# Increase scrollback buffer
+defscrollback 50000
+
+# UTF‑8 support
+defutf8 on
+
+# Hardstatus (status bar)
+hardstatus alwayslastline "%{= kG} %H %{= kW} %l %{= kG} %c %{= kW} %d/%m/%Y "
+
+# Make copy mode use vi keys
+bindkey -m h stuff h
+bindkey -m j stuff j
+bindkey -m k stuff k
+bindkey -m l stuff l
+
+# Quick escape from copy mode
+bindkey -m q stuff q
+
+# Better split commands
+bind S split
+bind | split -v
+
+# Rebind C-a to behave like tmux prefix if desired
+bindkey ^A command
+
+# Enable mouse scrolling (if supported)
+mousetrack on
